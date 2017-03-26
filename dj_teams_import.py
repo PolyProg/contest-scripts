@@ -13,11 +13,9 @@ with open(config_path, encoding='utf-8') as config_file:
   config = json.load(config_file)
 
 
-# Validate data: teams must have a name, a password, a unique location and a
-# category
+# Validate data
 if 'teams' not in config:
   sys.exit('Config must contain teams')
-
 all_locs = set()
 teams = config['teams']
 for team in teams:
