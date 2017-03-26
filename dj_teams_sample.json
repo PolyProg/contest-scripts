@@ -1,0 +1,24 @@
+{
+  "teams": [
+    {
+      "category_id": 1,
+      "id": 85,
+      "location": "56-01-02",
+      "members": [ "John Doe", "Jane Doe" ],
+      "name": "The Team",
+      "password": "111",
+      "user_id": 8,
+      "user_name": "u0"
+    },
+    {
+      "category_id": 2,
+      "id": 86,
+      "location": "78-03-05",
+      "members": [ "Fran\u00e7ois Martin", "Fran\u00e7oise Martin" ],
+      "name": "Ze Team",
+      "password": "222",
+      "user_id": 9,
+      "user_name": "u1"
+    }
+  ]
+}
