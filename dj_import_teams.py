@@ -7,7 +7,7 @@ import time
 import sys
 
 
-# First, get & the config
+# Get the config
 config_path = input('Config file path: ')
 with open(config_path, encoding='utf-8') as config_file:
   config = json.load(config_file)
