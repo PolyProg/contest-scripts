@@ -105,7 +105,7 @@ options = {
     'margin-right': '0.5in',
     'margin-bottom': '0.5in',
     'margin-left': '0.5in',
-    'encoding': "UTF-8"
+    'encoding': 'UTF-8'
 }
 
 
