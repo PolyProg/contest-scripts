@@ -69,12 +69,12 @@ html = """<!DOCTYPE html>
 
   h1 {
     font-size: 1.8em;
-    font-weight: bold;
+    font-weight: 700;
   }
 
   h2 {
     font-size: 1.2em;
-    font-weight: semibold;
+    font-weight: 500;
   }
 
   div {

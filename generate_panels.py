@@ -45,12 +45,12 @@ html = """<!DOCTYPE html>
   <style>
   h1 {
     font-size: 10em;
-    font-weight: bold;
+    font-weight: 700;
   }
   
   h2 {
     font-size: 4em;
-    font-weight: semibold;
+    font-weight: 500;
   }
 
   h3 {
