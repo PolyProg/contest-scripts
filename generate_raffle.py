@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 from bs4 import BeautifulSoup
 import json
+import os
 import random
 import requests
 import sys
@@ -77,8 +78,12 @@ for winner in winners:
     result.append(winner)
 
 
+# Create the out directory now (there are 2 outputs)
+os.makedirs('out', exist_ok=True)
+
+
 # Print the winners to a file, for logging purposes
-with open('raffle.log', 'w') as result_log:
+with open('out/raffle.log', 'w') as result_log:
   print('\n'.join([p[0] + ' | ' + p[1] for p in result]), file=result_log)
 
 
@@ -190,7 +195,7 @@ html = """<!DOCTYPE html>
 
 
 # Print the HTML to a file
-with open('raffle.html', 'w') as html_file:
+with open('out/raffle.html', 'w') as html_file:
   print(html, file=html_file)
 
 

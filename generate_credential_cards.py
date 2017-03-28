@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import json
+import os
 import pdfkit
 
 
@@ -115,6 +116,7 @@ options = {
 
 # Output the PDF
 print('Outputting PDF, this may take a while...')
-pdfkit.from_string(html, 'credential_cards.pdf', options=options)
+os.makedirs('out', exist_ok=True)
+pdfkit.from_string(html, 'out/credential_cards.pdf', options=options)
 
 print('Done!')
