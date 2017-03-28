@@ -20,9 +20,13 @@ for team in teams:
     sys.exit('Teams must have name, members, location, user_name, password, id, user_id')
 
 
+# Sort teams by location, to ease the work of people putting cards on tables
+teams.sort(key=lambda t: t['location'])
+
+
 # Convert teams to an HTML table contents
 table = ""
-for idx, team in enumerate(config['teams']):
+for idx, team in enumerate(teams):
   cell = ""
 
   if idx % 2 == 0:
@@ -112,6 +116,5 @@ options = {
 # Output the PDF
 print('Outputting PDF, this may take a while...')
 pdfkit.from_string(html, 'credential_cards.pdf', options=options)
-
 
 print('Done!')

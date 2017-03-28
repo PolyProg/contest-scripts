@@ -18,9 +18,13 @@ for team in teams:
     sys.exit('Teams must have name, members, location')
 
 
+# Sort teams by location, to ease the work of people putting up the panels
+teams.sort(key=lambda t: t['location'])
+
+
 # Convert teams to HTML divs
 body = ""
-for idx, team in enumerate(config['teams']):
+for idx, team in enumerate(teams):
   div = ""
 
   # don't put a page break on the last page, to avoid a blank sheet at the end
