@@ -24,17 +24,27 @@ os.makedirs('/tmp/dj_printdaemon_failure', exist_ok=True)
 print('Starting print daemon, Ctrl+C to exit')
 while True:
   # Get files
-  os.system('scp ' + dj_usr + '@' + dj_url + ':/opt/domjudge/print/* /tmp/dj_printdaemon/')
-
-  for file in os.listdir('/tmp/dj_printdaemon'):
-    result = os.system('lp "/tmp/dj_printdaemon/' + file + '"')
-    if result == 0:
-      # If successful, remove them
-      print('Printed file "' + file + '", go pick it up!')
-      os.remove('/tmp/dj_printdaemon/' + file)
-    else:
-      # Otherwise, move them for safekeeping and alert the user
-      os.rename('/tmp/dj_printdaemon/' + file, '/tmp/dj_printdaemon_failure/' + file)
-      print('!!!')
-      print('ERROR: lp status was ' + str(result) + ' for file /tmp/dj_printdaemon_failure/' + file)
-      print('!!!')
+  result = os.system('scp -i "' + dj_key + '" ' + dj_usr + '@' + dj_url + ':/opt/domjudge/print/* /tmp/dj_printdaemon/')
+  if result == 0:
+    for file in os.listdir('/tmp/dj_printdaemon'):
+      result = os.system('lp "/tmp/dj_printdaemon/' + file + '"')
+      if result == 0:
+        # If successful, move it on the server, remove it locally
+        print('Printed file "' + file + '", go pick it up!')
+        result = os.system('ssh -i "' + dj_key + '" "mv \\"/opt/domjudge/print/' + file + '\\" \\"/opt/domjudge/printarchive/' + file + '\\""'
+        if result == 0:
+          os.remove('/tmp/dj_printdaemon/' + file)
+        else:
+          print('!!!')
+          print('ERROR: ssh failed, result = ' + str(result) + ' for remote file /opt/domjudge/print/' + file)
+          print('!!!')
+      else:
+        # Otherwise, move them for safekeeping and alert the user
+        os.rename('/tmp/dj_printdaemon/' + file, '/tmp/dj_printdaemon_failure/' + file)
+        print('!!!')
+        print('ERROR: lp failed, result = ' + str(result) + ' for file /tmp/dj_printdaemon_failure/' + file)
+        print('!!!')
+  else:
+    print('!!!')
+    print('ERROR: scp failed, result = ' + str(result))
+    print('!!!')
