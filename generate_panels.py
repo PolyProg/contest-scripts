@@ -26,20 +26,21 @@ teams.sort(key=lambda t: t['location'])
 # Convert teams to HTML divs
 body = ""
 for idx, team in enumerate(teams):
-  div = ""
+  for n in range(2):
+    div = ""
 
-  # don't put a page break on the last page, to avoid a blank sheet at the end
-  if idx < len(config['teams']) - 1:
-    div += '<div style="page-break-after: always;">'
-  else:
-    div += '<div>'
+    # don't put a page break on the last page, to avoid a blank sheet at the end
+    if n == 0 or idx < len(config['teams']) - 1:
+      div += '<div style="page-break-after: always;">'
+    else:
+      div += '<div>'
 
-  div += '<h1>' + team['name'] + '</h1>'
-  div += '<h2>' + ', '.join(team['members']) + '</h2>'
-  div += '<h3>' + team['location'] + '</h3>'
-  div += '</div>'
+    div += '<h1>' + team['name'] + '</h1>'
+    div += '<h2>' + ', '.join(team['members']) + '</h2>'
+    div += '<h3>' + team['location'] + '</h3>'
+    div += '</div>'
 
-  body += div
+    body += div
 
 
 # Create the HTML
