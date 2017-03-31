@@ -24,6 +24,7 @@ hc2_cookies = { 'PHPSESSID': hc2_session }
 
 # Get the teams list
 hc2_req = requests.get('http://hc2.ch/admin/teams.php?all', cookies=hc2_cookies)
+hc2_req.encoding = 'utf-8'
 hc2_soup = BeautifulSoup(hc2_req.text, 'html.parser')
 
 
@@ -45,7 +46,8 @@ for row in rows:
       'members': list(map(clean, cells[2].text.split(','))),
       'category_id': dj_categ_pro if clean(cells[15].text) == '1' else dj_categ_student,
       'location': clean(cells[24].text),
-      'password': clean(cells[39].text)
+      'password': clean(cells[39].text),
+      'extra': ['t-shirts: ' + clean(cells[4].text)]
     }
     
     teams.append(team)
@@ -53,8 +55,8 @@ for row in rows:
 
 
 # Output the file
-with open('dj_teams.json', 'w') as teams_file:
+with open('teams.json', 'w') as teams_file:
   json.dump({'teams': teams}, teams_file, sort_keys=True)
 
 
-print('Done!') 
+print('Done!')

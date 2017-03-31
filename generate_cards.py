@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 import json
+import html
 import os
 import pdfkit
+import sys
 
 
 # Get the config
@@ -16,9 +18,8 @@ if 'teams' not in config:
 teams = config['teams']
 for team in teams:
   if 'name' not in team or 'members' not in team or 'location' not in team or \
-     'user_name' not in team or 'password' not in team or \
-     'id' not in team or 'user_id' not in team:
-    sys.exit('Teams must have name, members, location, user_name, password, id, user_id')
+     'user_name' not in team or 'password' not in team:
+    sys.exit('Teams must have name, members, location, user_name, password')
 
 
 # Sort teams by location, to ease the work of people putting cards on tables
@@ -34,19 +35,21 @@ for idx, team in enumerate(teams):
       cell += '<tr>'
 
   cell += '<td>'
-  cell += '<h1>' + team['name'] + '</h1>'
-  cell += '<h2>' + ', '.join(team['members']) + '</h2>'
+  cell += '<h1>' + html.escape(team['name']) + '</h1>'
+  cell += '<h2>' + html.escape(', '.join(team['members'])) + '</h2>'
   cell += '<div>'
   cell += 'DOMJudge username: <span class="cred">' + team['user_name'] + '</span>'
   cell += '<br>'
   cell += 'DOMJudge password: <span class="cred">' + team['password'] + '</span>'
   cell += '</div>'
-  cell += '<h3>(info for organizers: loc ' + team['location'] + ' / id ' + str(team['id']) + ' / uid ' + str(team['user_id']) + ')</h3>'
+  cell += '<h3>(location: ' + team['location'] + ')</h3>'
+  if 'extra' in team:
+    cell += '<h3>' + ' / '.join(team['extra']) + '</h3>'
   cell += '</td>'
 
   if idx % 2 == 1:
       cell += '</tr>'
-  
+
   table += cell
 
 
@@ -117,6 +120,6 @@ options = {
 # Output the PDF
 print('Outputting PDF, this may take a while...')
 os.makedirs('out', exist_ok=True)
-pdfkit.from_string(html, 'out/credential_cards.pdf', options=options)
+pdfkit.from_string(html, 'out/cards.pdf', options=options)
 
 print('Done!')

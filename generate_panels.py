@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import json
+import html
 import os
 import pdfkit
 
@@ -35,8 +36,8 @@ for idx, team in enumerate(teams):
     else:
       div += '<div>'
 
-    div += '<h1>' + team['name'] + '</h1>'
-    div += '<h2>' + ', '.join(team['members']) + '</h2>'
+    div += '<h1>' + html.escape(team['name']) + '</h1>'
+    div += '<h2>' + html.escape(', '.join(team['members'])) + '</h2>'
     div += '<h3>' + team['location'] + '</h3>'
     div += '</div>'
 
@@ -81,6 +82,9 @@ options = {
     'encoding': 'UTF-8'
 }
 
+#TESTING
+with open('xxx', 'w') as f:
+  print(html,file=f)
 
 # Output the PDF
 print('Outputting PDF, this may take a while...')

@@ -2,6 +2,7 @@
   "teams": [
     {
       "category_id": 1,
+      "extra": [ "t-shirts: M gM" ],
       "id": 85,
       "location": "56-01-02",
       "members": [ "John Doe", "Jane Doe" ],
@@ -12,6 +13,7 @@
     },
     {
       "category_id": 2,
+      "extra": [ "t-shirts: M S" ],
       "id": 86,
       "location": "78-03-05",
       "members": [ "Fran\u00e7ois Martin", "Fran\u00e7oise Martin" ],
