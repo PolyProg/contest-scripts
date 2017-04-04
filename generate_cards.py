@@ -31,10 +31,7 @@ table = ""
 for idx, team in enumerate(teams):
   cell = ""
 
-  if idx % 2 == 0:
-      cell += '<tr>'
-
-  cell += '<td>'
+  cell += '<div style="page-break-inside: avoid;">'
   cell += '<h1>' + html.escape(team['name']) + '</h1>'
   cell += '<h2>' + html.escape(', '.join(team['members'])) + '</h2>'
   cell += '<div>'
@@ -42,13 +39,12 @@ for idx, team in enumerate(teams):
   cell += '<br>'
   cell += 'DOMJudge password: <span class="cred">' + team['password'] + '</span>'
   cell += '</div>'
-  cell += '<h3>(location: ' + team['location'] + ')</h3>'
+  cell += '<h3>'
+  cell += 'loc: ' + team['location']
   if 'extra' in team:
-    cell += '<h3>' + ' / '.join(team['extra']) + '</h3>'
-  cell += '</td>'
-
-  if idx % 2 == 1:
-      cell += '</tr>'
+    cell += ' / ' + ' / '.join(team['extra'])
+  cell += '</h3>'
+  cell += '</div>'
 
   table += cell
 
@@ -99,9 +95,7 @@ html = """<!DOCTYPE html>
   }
   </style>
 </head>
-<body>
-  <table>""" + table + """</table>
-</body>
+<body>""" + table + """</body>
 </html>
 """
 

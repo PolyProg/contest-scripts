@@ -16,9 +16,10 @@ with open(config_path, encoding='utf-8') as config_file:
 # Get teams to exclude
 to_exclude_str = input('Team IDs to exclude, separated by commas: ').strip()
 if len(to_exclude_str) > 0:
-  to_exclude = set(map(lambda s: s.strip(), to_exclude_str.split(',')))
+  to_exclude = set(map(lambda s: int(s.strip()), to_exclude_str.split(',')))
 else:
   to_exclude = set()
+
 
 # Validate data
 to_exclude_clone = set(to_exclude)
@@ -29,10 +30,10 @@ for team in teams:
   if 'name' not in team or 'members' not in team or 'id' not in team:
     sys.exit('Teams must have name, members, id')
   if team['id'] in to_exclude:
+    print('excluding ' + str(team['id']))
     to_exclude_clone.remove(team['id'])
 if len(to_exclude_clone) > 0:
   sys.exit('Excluded IDs do not exist: ' + ', '.join(to_exclude_clone))
-
 
 # Get the DOMJudge host & session
 dj_url = input('DOMJudge base URL (no trailing slash): ')
@@ -69,8 +70,9 @@ for team in teams:
 # Not very efficient, but len(teams) is <100...
 winners = []
 for team in teams:
-  for member in team['members']:
-    winners += [(member, team['name']) for i in range(max(1, team['solved']))]
+  if team['id'] not in to_exclude:
+    for member in team['members']:
+      winners += [(member, team['name']) for i in range(max(1, team['solved']))]
 random.shuffle(winners)
 result = []
 for winner in winners:
