@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -eu
+
+readonly BASE_USERNAME="${1}"
+readonly PASSWORD="${2}"
+readonly ID_FROM="${3}"
+readonly ID_TO="${4}"
+
+readonly DOMAIN='OU=POLYPROG-Workstations,OU=POLYPROG,OU=SCIENC-CULT,OU=ASSOCIATIONS,OU=EHE,DC=intranet,DC=epfl,DC=ch'
+readonly BASE_UID=500000
+readonly GID=30154
+
+range="$(seq ${ID_FROM} ${ID_TO})"
+
+# create before because of AD's propagation delay
+for i in ${range}
+do
+	adtool usercreate "${BASE_USERNAME}-${i}" "${DOMAIN}"
+done
+
+for i in ${range}
+do
+	user="${BASE_USERNAME}-${i}"
+
+	adtool setpass "${user}" "${PASSWORD}"
+	adtool userunlock "${user}"
+
+	adtool attributereplace "${user}" uid "$(echo "${user}" | tr -d -)"
+	adtool attributereplace "${user}" uidNumber "$((${BASE_UID} + ${i}))"
+	adtool attributereplace "${user}" gidNumber "${GID}"
+done
