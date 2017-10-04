@@ -10,8 +10,10 @@ def clean(s):
 
 
 # Get the affiliation IDs
-dj_affil_epf = int(input('DOMJudge EPFL affiliation ID: '))
-dj_affil_eth = int(input('DOMJudge ETHZ affiliation ID: '))
+dj_affil_epfe = int(input('DOMJudge EPFL affiliation ID: '))
+dj_affil_ethe = int(input('DOMJudge ETHZ affiliation ID: '))
+dj_affil_epfi = int(input('DOMJudge EPFL ineligible affiliation ID: '))
+dj_affil_ethi = int(input('DOMJudge ETHZ ineligible affiliation ID: '))
 
 
 # Get the session cookie
@@ -36,18 +38,18 @@ for row in rows:
   cells = row.findAll('td')
 
   affil = None
+  eligible = clean(cells[14].text) == '1'
   affil_text = clean(cells[7].text)
   if affil_text == "EPFL":
-    affil = dj_affil_epf
+    affil = dj_affil_epfe if eligible else dj_affil_epfi
   elif affil_text == "ETH":
-    affil = dj_affil_eth
+    affil = dj_affil_ethe if eligible else dj_affil_ethi
 
   team = {
-    'login': clean(cells[0].text),
+    'user_name': clean(cells[0].text),
     'name': clean(cells[3].text) + " " + clean(cells[4].text),
     'affiliation_id': affil,
     'password': clean(cells[8].text),
-    'eligible': True if clean(cells[14].text) == '1' else False
   }
     
   teams.append(team)

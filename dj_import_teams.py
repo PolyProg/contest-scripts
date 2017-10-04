@@ -19,11 +19,12 @@ if 'teams' not in config:
 all_locs = set()
 teams = config['teams']
 for team in teams:
-  if 'name' not in team or 'location' not in team or 'password' not in team or 'category_id' not in team:
-    sys.exit('Teams must have name, password, location, category_id')
-  if team['location'] in all_locs:
-    sys.exit('Duplicate location found: ' + team['location'])
-  all_locs.add(team['location'])
+  if 'name' not in team or 'password' not in team:
+    sys.exit('Teams must have name, password')
+  if 'location' in team:
+    if team['location'] in all_locs:
+      sys.exit('Duplicate location found: ' + team['location'])
+    all_locs.add(team['location'])
 
 
 # Get the DOMJudge host & session
@@ -35,20 +36,30 @@ dj_session = input('DOMJudge session cookie: ')
 dj_cookies = { 'domjudge_session': dj_session }
 
 
+# Get teams, to check whether they already exist
+check_teams_req = requests.get(dj_url + '/jury/teams.php', cookies=dj_cookies)
+check_teams_soup = BeautifulSoup(check_teams_req.text, 'html.parser')
+
 # Create teams
 user_name_format = 'u%0' + str(math.ceil(math.log10(len(teams)))) + 'd'
 for idx, team in enumerate(teams):
-  team['user_name'] = user_name_format % idx
+  if 'user_name' not in team:
+    team['user_name'] = user_name_format % idx
+
+  if check_teams_soup.find(text=team['name']) is not None:
+    print('Team already exists: ' + team['name'])
+    continue
+
   team_form = {
     'data[0][name]': team['name'],
-    'data[0][categoryid]': team['category_id'],
-    'data[0][room]': team['location'],
+    'data[0][categoryid]': team['category_id'] if 'category_id' in team else '2', # 2 == default "self-registered",
+    'data[0][room]': team['location'] if 'location' in team else '',
     'data[0][mapping][1][extra][username]': team['user_name'],
     'cmd': 'add',
     'referrer': '',
     'table': 'team',
     'data[0][adduser]': '1',
-    'data[0][affilid]': '',
+    'data[0][affilid]': team['affiliation_id'] if 'affiliation_id' in team else '',
     'data[0][comments]': '',
     'data[0][enabled]': '1',
     'data[0][penalty]': '0',
@@ -65,13 +76,13 @@ for idx, team in enumerate(teams):
   time.sleep(0.5)
 
 
-# Get team IDs (using their location)
+# Get team IDs (using their name)
 teams_req = requests.get(dj_url + '/jury/teams.php', cookies=dj_cookies)
 teams_soup = BeautifulSoup(teams_req.text, 'html.parser')
 for team in teams:
   # find the location, then its parent the <a> tag, then its parent the <td>,
   # then its parent the <tr>
-  tr = teams_soup.find(text=team['location']).parent.parent.parent
+  tr = teams_soup.find(text=team['name']).parent.parent.parent
   # first td contains the team ID as text, prefixed with 't'
   team['id'] = int(list(tr.children)[0].string[1:])
 
@@ -86,7 +97,7 @@ for team in teams:
   team['user_id'] = int(a['href'][a['href'].index('=') + 1:])
 
 
-# Create users
+# Edit users (to set their password)
 for team in teams:
   user_form = {
     'data[0][teamid]': team['id'],
@@ -107,7 +118,7 @@ for team in teams:
   }
   r = requests.post(dj_url + '/jury/edit.php', cookies=dj_cookies, data=user_form)
   r.raise_for_status()
-  print('Created user for ' + team['name'])
+  print('Edited user for ' + team['name'])
   time.sleep(0.5)
 
 
