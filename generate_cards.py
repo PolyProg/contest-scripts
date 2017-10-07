@@ -17,13 +17,13 @@ if 'teams' not in config:
   sys.exit('Config must contain teams')
 teams = config['teams']
 for team in teams:
-  if 'name' not in team or 'members' not in team or 'location' not in team or \
+  if 'name' not in team or \
      'user_name' not in team or 'password' not in team:
     sys.exit('Teams must have name, members, location, user_name, password')
 
 
 # Sort teams by location, to ease the work of people putting cards on tables
-teams.sort(key=lambda t: t['location'])
+teams.sort(key=lambda t: t['location'] if 'location' in teams else t['name'])
 
 
 # Convert teams to an HTML table contents
@@ -33,14 +33,16 @@ for idx, team in enumerate(teams):
 
   cell += '<div style="page-break-inside: avoid;">'
   cell += '<h1>' + html.escape(team['name']) + '</h1>'
-  cell += '<h2>' + html.escape(', '.join(team['members'])) + '</h2>'
+  if 'members' in team:
+    cell += '<h2>' + html.escape(', '.join(team['members'])) + '</h2>'
   cell += '<div>'
   cell += 'DOMJudge username: <span class="cred">' + team['user_name'] + '</span>'
   cell += '<br>'
   cell += 'DOMJudge password: <span class="cred">' + team['password'] + '</span>'
   cell += '</div>'
   cell += '<h3>'
-  cell += 'loc: ' + team['location']
+  if 'location' in team:
+    cell += 'loc: ' + team['location']
   if 'extra' in team:
     cell += ' / ' + ' / '.join(team['extra'])
   cell += '</h3>'

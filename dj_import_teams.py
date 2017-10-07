@@ -40,6 +40,8 @@ dj_cookies = { 'domjudge_session': dj_session }
 check_teams_req = requests.get(dj_url + '/jury/teams.php', cookies=dj_cookies)
 check_teams_soup = BeautifulSoup(check_teams_req.text, 'html.parser')
 
+already_done = []
+
 # Create teams
 user_name_format = 'u%0' + str(math.ceil(math.log10(len(teams)))) + 'd'
 for idx, team in enumerate(teams):
@@ -48,6 +50,7 @@ for idx, team in enumerate(teams):
 
   if check_teams_soup.find(text=team['name']) is not None:
     print('Team already exists: ' + team['name'])
+    already_done.append(team['name'])
     continue
 
   team_form = {
@@ -99,6 +102,9 @@ for team in teams:
 
 # Edit users (to set their password)
 for team in teams:
+  if team['name'] in already_done:
+    continue
+
   user_form = {
     'data[0][teamid]': team['id'],
     'data[0][name]': team['name'],
