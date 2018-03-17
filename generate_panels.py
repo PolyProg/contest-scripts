@@ -51,10 +51,10 @@ html = """<!DOCTYPE html>
   <meta charset="UTF-8" />
   <style>
   h1 {
-    font-size: 10em;
+    font-size: 12em;
     font-weight: 700;
   }
-  
+
   h2 {
     font-size: 4em;
     font-weight: 500;
@@ -75,16 +75,12 @@ html = """<!DOCTYPE html>
 options = {
     'orientation': 'landscape',
     'page-size': 'A4',
-    'margin-top': '0.5in',
-    'margin-right': '0.5in',
-    'margin-bottom': '0.5in',
-    'margin-left': '0.5in',
+    'margin-top': '0.3in',
+    'margin-right': '0.3in',
+    'margin-bottom': '0.3in',
+    'margin-left': '0.3in',
     'encoding': 'UTF-8'
 }
-
-#TESTING
-with open('xxx', 'w') as f:
-  print(html,file=f)
 
 # Output the PDF
 print('Outputting PDF, this may take a while...')

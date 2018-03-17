@@ -42,27 +42,26 @@ check_teams_soup = BeautifulSoup(check_teams_req.text, 'html.parser')
 
 already_done = []
 
-# Create teams
-user_name_format = 'u%0' + str(math.ceil(math.log10(len(teams)))) + 'd'
-for idx, team in enumerate(teams):
-  if 'user_name' not in team:
-    team['user_name'] = user_name_format % idx
+def fix(name):
+  return name.replace("'", "&apos;")
 
-  if check_teams_soup.find(text=team['name']) is not None:
+# Create teams
+for idx, team in enumerate(teams):
+  if check_teams_soup.find(text=fix(team['name'])) is not None:
     print('Team already exists: ' + team['name'])
     already_done.append(team['name'])
     continue
 
   team_form = {
     'data[0][name]': team['name'],
-    'data[0][categoryid]': team['category_id'] if 'category_id' in team else '2', # 2 == default "self-registered",
+    'data[0][categoryid]': team['category_id'], # 2 == default "self-registered",
     'data[0][room]': team['location'] if 'location' in team else '',
     'data[0][mapping][1][extra][username]': team['user_name'],
     'cmd': 'add',
     'referrer': '',
     'table': 'team',
     'data[0][adduser]': '1',
-    'data[0][affilid]': team['affiliation_id'] if 'affiliation_id' in team else '',
+    'data[0][affilid]': '',
     'data[0][comments]': '',
     'data[0][enabled]': '1',
     'data[0][penalty]': '0',
@@ -85,7 +84,9 @@ teams_soup = BeautifulSoup(teams_req.text, 'html.parser')
 for team in teams:
   # find the location, then its parent the <a> tag, then its parent the <td>,
   # then its parent the <tr>
-  tr = teams_soup.find(text=team['name']).parent.parent.parent
+  loc = teams_soup.find(text=fix(team['name']))
+  if loc is None: sys.exit("wtf " + fix(team['name']))
+  tr = loc.parent.parent.parent
   # first td contains the team ID as text, prefixed with 't'
   team['id'] = int(list(tr.children)[0].string[1:])
 
@@ -102,9 +103,6 @@ for team in teams:
 
 # Edit users (to set their password)
 for team in teams:
-  if team['name'] in already_done:
-    continue
-
   user_form = {
     'data[0][teamid]': team['id'],
     'data[0][name]': team['name'],

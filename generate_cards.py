@@ -23,7 +23,7 @@ for team in teams:
 
 
 # Sort teams by location, to ease the work of people putting cards on tables
-teams.sort(key=lambda t: t['location'] if 'location' in teams else t['name'])
+teams.sort(key=lambda t: t['location'])
 
 
 # Convert teams to an HTML table contents
@@ -36,9 +36,11 @@ for idx, team in enumerate(teams):
   if 'members' in team:
     cell += '<h2>' + html.escape(', '.join(team['members'])) + '</h2>'
   cell += '<div>'
-  cell += 'DOMJudge username: <span class="cred">' + team['user_name'] + '</span>'
+  cell += 'Username: <span class="cred">' + team['user_name'] + '</span>'
   cell += '<br>'
-  cell += 'DOMJudge password: <span class="cred">' + team['password'] + '</span>'
+  cell += 'Password: <span class="cred">' + team['password'] + '</span>'
+  cell += '<br>'
+  cell += 'Log in to the machine using these credentials, select "POLYPROG-CONTEST", then log into the contest server using these same credentials'
   cell += '</div>'
   cell += '<h3>'
   if 'location' in team:

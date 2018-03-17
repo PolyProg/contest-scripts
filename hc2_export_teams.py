@@ -1,9 +1,18 @@
 #!/usr/bin/python3
 from bs4 import BeautifulSoup
 import json
+import random
 import re
 import requests
 
+def gen_password():
+  password = ''
+  for i in range(3):
+    password += random.choice('abcdefghijklmnopqrstuvwxyz')
+    password += random.choice('.!?')
+    password += random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    password += random.choice('0123456789')
+  return password
 
 def clean(s):
   return re.sub(' +',' ', s.strip())
@@ -15,48 +24,46 @@ dj_categ_pro = int(input('DOMJudge professionals category ID: '))
 
 
 # Get the session cookie
-hc2_session = input('HC2.ch PHPSESSID: ')
-
-
-# Create the cookies
-hc2_cookies = { 'PHPSESSID': hc2_session }
+hc2_secret = input('HC2.ch secret: ')
 
 
 # Get the teams list
-hc2_req = requests.get('http://hc2.ch/admin/teams.php?all', cookies=hc2_cookies)
+hc2_req = requests.get('http://myhc2.azurewebsites.net/admin/approved?secret=' + hc2_secret)
 hc2_req.encoding = 'utf-8'
 hc2_soup = BeautifulSoup(hc2_req.text, 'html.parser')
 
 
-# Get the rows, except the first (header) and last (sum totals)
-rows = hc2_soup.findAll('tr')[1:-1]
+# Get the rows, except the first (header)
+rows = hc2_soup.findAll('tr')[1:]
 
 
 # Convert to teams
-teams = []
-for row in rows:
+teams = {}
+for idx, row in enumerate(rows):
   cells = row.findAll('td')
-  team_name = clean(cells[18].text)
+  team_name = clean(cells[0].text)
 
-  if cells[20].text == '1':
-    print('Ignoring waiting list team ' + team_name)
-  else:
+  if team_name not in teams:
     team = {
-      'name': clean(cells[18].text),
-      'members': list(map(clean, cells[2].text.split(','))),
-      'category_id': dj_categ_pro if clean(cells[15].text) == '1' else dj_categ_student,
-      'location': clean(cells[24].text),
-      'password': clean(cells[39].text),
-      'extra': ['t-shirts: ' + clean(cells[4].text)]
+      'user_name': 'hc2-' + str(idx),
+      'name': team_name,
+      'members': [],
+      'category_id': dj_categ_pro if clean(cells[1].text) == 'professional' else dj_categ_student,
+      'location': '',
+      'password': gen_password(),
+      'extra': []
     }
-    
-    teams.append(team)
+    teams[team_name] = team
     print('Imported team ' + team_name)
 
+  person_name = clean(cells[2].text)
+  teams[team_name]['members'].append(person_name)
+  teams[team_name]['extra'].append(clean(cells[5].text))
+  print('Imported contestant ' + person_name)
 
 # Output the file
 with open('teams.json', 'w') as teams_file:
-  json.dump({'teams': teams}, teams_file, sort_keys=True)
+  json.dump({'teams': list(teams.values())}, teams_file, sort_keys=True, indent=4)
 
 
 print('Done!')
