@@ -26,8 +26,10 @@ gid = 11172 # should probably (?) be the GID of the user configured to use adtoo
 
 for team in teams:
   os.system('adtool usercreate ' + team['user_name'] + ' ' + domain)
+
 # make sure changes have propagated
-time.sleep(10)
+#time.sleep(10)
+
 for idx, team in enumerate(teams):
   os.system('adtool setpass ' + team['user_name'] + " '" + team['password'] + "'")
   os.system('adtool userunlock ' + team['user_name'])
