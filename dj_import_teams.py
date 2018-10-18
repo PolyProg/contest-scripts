@@ -19,8 +19,8 @@ if 'teams' not in config:
 all_locs = set()
 teams = config['teams']
 for team in teams:
-  if 'name' not in team or 'password' not in team:
-    sys.exit('Teams must have name, password')
+  if 'name' not in team or 'password' not in team or 'category_id' not in team:
+    sys.exit('Teams must have name, password, category_id')
   if 'location' in team:
     if team['location'] in all_locs:
       sys.exit('Duplicate location found: ' + team['location'])
@@ -54,7 +54,7 @@ for idx, team in enumerate(teams):
 
   team_form = {
     'data[0][name]': team['name'],
-    'data[0][categoryid]': team['category_id'], # 2 == default "self-registered",
+    'data[0][categoryid]': team['category_id'],
     'data[0][room]': team['location'] if 'location' in team else '',
     'data[0][mapping][1][extra][username]': team['user_name'],
     'cmd': 'add',
@@ -103,27 +103,28 @@ for team in teams:
 
 # Edit users (to set their password)
 for team in teams:
-  user_form = {
-    'data[0][teamid]': team['id'],
-    'data[0][name]': team['name'],
-    'keydata[0][userid]': team['user_id'],
-    'keydata[0][username]': team['user_name'],
-    'data[0][password]': team['password'],
-    'data[0][email]': '',
-    'data[0][enabled]': '1',
-    'data[0][ip_address]': '',
-    'data[0][mapping][0][items][2]': '3',
-    'cmd': 'edit',
-    'referrer': '',
-    'table': 'user',
-    'data[0][mapping][0][fk][0]': 'userid',
-    'data[0][mapping][0][fk][1]': 'roleid',
-    'data[0][mapping][0][table]': 'userrole'
-  }
-  r = requests.post(dj_url + '/jury/edit.php', cookies=dj_cookies, data=user_form)
-  r.raise_for_status()
-  print('Edited user for ' + team['name'])
-  time.sleep(0.5)
+  if team['name'] not in already_done:
+    user_form = {
+      'data[0][teamid]': team['id'],
+      'data[0][name]': team['name'],
+      'keydata[0][userid]': team['user_id'],
+      'keydata[0][username]': team['user_name'],
+      'data[0][password]': team['password'],
+      'data[0][email]': '',
+      'data[0][enabled]': '1',
+      'data[0][ip_address]': '',
+      'data[0][mapping][0][items][2]': '3',
+      'cmd': 'edit',
+      'referrer': '',
+      'table': 'user',
+      'data[0][mapping][0][fk][0]': 'userid',
+      'data[0][mapping][0][fk][1]': 'roleid',
+      'data[0][mapping][0][table]': 'userrole'
+    }
+    r = requests.post(dj_url + '/jury/edit.php', cookies=dj_cookies, data=user_form)
+    r.raise_for_status()
+    print('Edited user for ' + team['name'])
+    time.sleep(0.5)
 
 
 # Update the file to include teams' IDs and user IDs

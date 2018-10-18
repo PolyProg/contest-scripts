@@ -19,11 +19,12 @@ teams = config['teams']
 for team in teams:
   if 'name' not in team or \
      'user_name' not in team or 'password' not in team:
-    sys.exit('Teams must have name, members, location, user_name, password')
+    sys.exit('Teams must have name, members, user_name, password')
 
 
 # Sort teams by location, to ease the work of people putting cards on tables
-teams.sort(key=lambda t: t['location'])
+if 'location' in teams[0]:
+  teams.sort(key=lambda t: t['location'])
 
 
 # Convert teams to an HTML table contents
@@ -39,8 +40,8 @@ for idx, team in enumerate(teams):
   cell += 'Username: <span class="cred">' + team['user_name'] + '</span>'
   cell += '<br>'
   cell += 'Password: <span class="cred">' + team['password'] + '</span>'
-  cell += '<br>'
-  cell += 'Log in to the machine using these credentials, select "POLYPROG-CONTEST", then log into the contest server using these same credentials'
+  #cell += '<br>'
+  #cell += 'Log in to the machine using these credentials, select "POLYPROG-CONTEST", then log into the contest server using these same credentials'
   cell += '</div>'
   cell += '<h3>'
   if 'location' in team:

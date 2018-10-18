@@ -1,64 +1,63 @@
 #!/usr/bin/python3
-from bs4 import BeautifulSoup
+import csv
 import json
-import re
-import requests
+import random
 
 
-def clean(s):
-  return re.sub(' +',' ', s.strip())
+def gen_password():
+  password = ''
+  for i in range(3):
+    password += random.choice('abcdefghijklmnopqrstuvwxyz')
+    password += random.choice('.!?')
+    password += random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    password += random.choice('0123456789')
+  return password
 
+existing = []
+config_path = input('Config file path: ')
+with open(config_path, encoding='utf-8') as config_file:
+  config = json.load(config_file)
+  for x in config['teams']:
+    existing.append(x['name'])
 
 # Get the affiliation IDs
-dj_affil_epfe = int(input('DOMJudge EPFL affiliation ID: '))
-dj_affil_ethe = int(input('DOMJudge ETHZ affiliation ID: '))
-dj_affil_epfi = int(input('DOMJudge EPFL ineligible affiliation ID: '))
-dj_affil_ethi = int(input('DOMJudge ETHZ ineligible affiliation ID: '))
+dj_categ_epfl = int(input('DOMJudge EPFL category ID: '))
+dj_categ_ethz = int(input('DOMJudge ETHZ category ID: '))
 
+# Get the file
+file_name = input('File: ')
 
-# Get the session cookie
-hc2_session = input('swerc.hc2.ch PHPSESSID: ')
-
-
-# Create the cookies
-hc2_cookies = { 'PHPSESSID': hc2_session }
-
-
-# Get the teams list
-hc2_req = requests.get('http://swerc.hc2.ch/admin/index.php?all', cookies=hc2_cookies)
-hc2_req.encoding = 'utf-8'
-hc2_soup = BeautifulSoup(hc2_req.text, 'html.parser')
-
-# Get the rows, except the first (header) and last (sum totals)
-rows = hc2_soup.findAll('tr')[1:-1]
+# Get the rows, ignore 1st as it is header
+with open(file_name) as file:
+  rows = list(csv.reader(file, delimiter=','))[1:]
 
 # Convert to teams
 teams = []
-for row in rows:
-  cells = row.findAll('td')
+for idx, cells in enumerate(rows):
+  if cells[0] == "": continue
+  if (cells[2] + " " + cells[3]) in existing: continue
 
-  affil = None
-  eligible = clean(cells[14].text) == '1'
-  affil_text = clean(cells[7].text)
-  if affil_text == "EPFL":
-    affil = dj_affil_epfe if eligible else dj_affil_epfi
-  elif affil_text == "ETH":
-    affil = dj_affil_ethe if eligible else dj_affil_ethi
+  categ = '2' # self-registered
+  eligible = cells[6] == "No" and (cells[7] == "2014 or later" or cells[8] == "1995 or later") and cells[10] == "Yes"
+  if cells[4] == "EPFL":
+    categ = dj_categ_epfl
+  elif cells[4] == "ETHZ":
+    categ = dj_categ_ethz
 
   team = {
-    'user_name': clean(cells[0].text),
-    'name': clean(cells[3].text) + " " + clean(cells[4].text),
-    'affiliation_id': affil,
-    'password': clean(cells[8].text),
+    'user_name': "user-" + str(idx),
+    'name': cells[2] + " " + cells[3],
+    'category_id': categ,
+    'password': gen_password(),
   }
-    
-  teams.append(team)
+
+  config['teams'].append(team)
   print('Imported ' + team['name'])
 
 
 # Output the file
 with open('teams.json', 'w') as teams_file:
-  json.dump({'teams': teams}, teams_file, sort_keys=True)
+  json.dump(config, teams_file, sort_keys=True)
 
 
 print('Done!')
