@@ -18,6 +18,22 @@ def clean(s):
   return re.sub(' +',' ', s.strip())
 
 
+# Make up the list of locations
+# We have 3 rooms: CO 020, CO 021, CO 023
+# CO 020 and 023 have the same layout: 5 rows of 9 computers, which are too close to each other so we use 4 per row
+# CO 021 has 10 rows of 6 computers, far apart to have one team per computer
+# We additionally reserve 2 rows of CO 023 for emergency needs, e.g. a computer fails and a team needs to be moved
+locations = []
+for c in range(0,  5):
+  for r in range(4):
+    locations.append('20-' + str(c).zfill(2) + '-' + str(1 + r * 2).zfill(2))
+for c in range(0, 10):
+  for r in range(6):
+    locations.append('21-' + str(c).zfill(2) + '-' + str(r).zfill(2))
+for c in range(2,  5):
+  for r in range(4):
+    locations.append('23-' + str(c).zfill(2) + '-' + str(1 + r * 2).zfill(2))
+
 # Get the category IDs
 dj_categ_student = int(input('DOMJudge students category ID: '))
 dj_categ_pro = int(input('DOMJudge professionals category ID: '))
@@ -36,7 +52,6 @@ hc2_soup = BeautifulSoup(hc2_req.text, 'html.parser')
 # Get the rows, except the first (header)
 rows = hc2_soup.findAll('tr')[1:]
 
-
 # Convert to teams
 teams = {}
 for idx, row in enumerate(rows):
@@ -49,7 +64,7 @@ for idx, row in enumerate(rows):
       'name': team_name,
       'members': [],
       'category_id': dj_categ_pro if clean(cells[1].text) == 'professional' else dj_categ_student,
-      'location': '',
+      'location': locations[idx],
       'password': gen_password(),
       'extra': []
     }

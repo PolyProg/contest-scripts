@@ -1,6 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
-sudo apt install python3-pip
+set -eux
+
+sudo apt-get install python3-pip
 sudo pip3 install beautifulsoup4
 
 # https://github.com/JazzCore/python-pdfkit/blob/master/travis/before-script.sh
@@ -17,7 +19,7 @@ rm -rf wkhtmltox
 sudo apt-get install xvfb
 echo -e '#!/bin/bash\nxvfb-run -a --server-args="-screen 0, 1024x768x24" /usr/bin/wkhtmltopdf -q $*' | sudo tee /usr/bin/wkhtmltopdf.sh > /dev/null
 sudo chmod a+x /usr/bin/wkhtmltopdf.sh
-sudo ln -s /usr/bin/wkhtmltopdf.sh /usr/local/bin/wkhtmltopdf
+sudo ln -fs /usr/bin/wkhtmltopdf.sh /usr/local/bin/wkhtmltopdf
 # Finallly we can install pdfkit...
 sudo pip3 install pdfkit
 
@@ -34,7 +36,7 @@ sudo make install
 # Configure it
 cat | sudo tee '/usr/local/etc/adtool.cfg' << EOF
 uri ldaps://intranet.epfl.ch
-binddn CN=Pirelli Solal,OU=NAL-Users,OU=NAL,OU=IINFCOM,OU=IC,DC=intranet,DC=epfl,DC=ch
+binddn CN=Pirelli Solal,OU=DSLAB-Users,OU=DSLAB,OU=IINFCOM,OU=IC,DC=intranet,DC=epfl,DC=ch
 bindpw LALALA
 searchbase DC=intranet,DC=epfl,DC=ch
 EOF
