@@ -22,6 +22,7 @@ sudo ln -s /usr/bin/wkhtmltopdf.sh /usr/local/bin/wkhtmltopdf
 sudo pip3 install pdfkit
 
 
+# Install adtool
 sudo apt-get install ldap-utils libldap2-dev openssl
 wget https://gp2x.org/adtool/adtool-1.3.3.tar.gz
 tar -xvf adtool-1.3.3.tar.gz
@@ -31,7 +32,6 @@ make
 sudo make install
 
 # Configure it
-# TODO a proper prompt
 cat | sudo tee '/usr/local/etc/adtool.cfg' << EOF
 uri ldaps://intranet.epfl.ch
 binddn CN=Pirelli Solal,OU=NAL-Users,OU=NAL,OU=IINFCOM,OU=IC,DC=intranet,DC=epfl,DC=ch
