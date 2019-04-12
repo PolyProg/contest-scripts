@@ -1,10 +1,16 @@
 #!/usr/bin/python3
 from bs4 import BeautifulSoup
 import json
+import html
 import math
 import requests
 import time
 import sys
+
+
+def get_soup(h):
+  # BeautifulSoup sometimes doesn't unescape all entities, and unescape() puts <> which look like tags, so we unescape everything except those
+  return BeautifulSoup(html.unescape(h.replace("&gt;", "&amp;gt;").replace("&lt;", "&amp;lt;")), features="html.parser")
 
 
 # Get the config
@@ -38,18 +44,15 @@ dj_cookies = { 'domjudge_session': dj_session }
 
 # Get teams, to check whether they already exist
 check_teams_req = requests.get(dj_url + '/jury/teams.php', cookies=dj_cookies)
-check_teams_soup = BeautifulSoup(check_teams_req.text, 'html.parser')
+check_teams_soup = get_soup(check_teams_req.text)
 
 already_done = []
 
-def fix(name):
-  return name.replace("'", "&apos;")
-
 # Create teams
 for idx, team in enumerate(teams):
-  if check_teams_soup.find(text=fix(team['name'])) is not None:
+  if check_teams_soup.find(text=team['name']) is not None:
     print('Team already exists: ' + team['name'])
-    already_done.append(team['name'])
+    #already_done.append(team['name'])
     continue
 
   team_form = {
@@ -80,12 +83,12 @@ for idx, team in enumerate(teams):
 
 # Get team IDs (using their name)
 teams_req = requests.get(dj_url + '/jury/teams.php', cookies=dj_cookies)
-teams_soup = BeautifulSoup(teams_req.text, 'html.parser')
+teams_soup = get_soup(teams_req.text)
 for team in teams:
   # find the location, then its parent the <a> tag, then its parent the <td>,
   # then its parent the <tr>
-  loc = teams_soup.find(text=fix(team['name']))
-  if loc is None: sys.exit("wtf " + fix(team['name']))
+  loc = teams_soup.find(text=team['name'])
+  if loc is None: sys.exit("cannot find loc " + team['name'])
   tr = loc.parent.parent.parent
   # first td contains the team ID as text, prefixed with 't'
   team['id'] = int(list(tr.children)[0].string[1:])
@@ -93,7 +96,7 @@ for team in teams:
 
 # Get team user IDs (using their name)
 users_req = requests.get(dj_url + '/jury/users.php', cookies=dj_cookies)
-users_soup = BeautifulSoup(users_req.text, 'html.parser')
+users_soup = get_soup(users_req.text)
 for team in teams:
   # find the username, then its parent the <a> tag
   a = users_soup.find(text=team['user_name']).parent

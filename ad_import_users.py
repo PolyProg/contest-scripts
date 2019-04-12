@@ -22,7 +22,7 @@ for team in teams:
 # Import teams
 domain = 'OU=POLYPROG-Workstations,OU=POLYPROG,OU=SCIENC-CULT,OU=ASSOCIATIONS,OU=EHE,DC=intranet,DC=epfl,DC=ch'
 uid = 500000
-gid = 11172 # should probably (?) be the GID of the user configured to use adtool
+gid = 20192 # should probably (?) be the GID of the user configured to use adtool
 
 for team in teams:
   os.system('adtool usercreate ' + team['user_name'] + ' ' + domain)
