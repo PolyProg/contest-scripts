@@ -24,14 +24,14 @@ domain = 'OU=POLYPROG-Workstations,OU=POLYPROG,OU=SCIENC-CULT,OU=ASSOCIATIONS,OU
 uid = 500000
 gid = 20192 # should probably (?) be the GID of the user configured to use adtool
 
-for team in teams:
-  os.system('adtool usercreate ' + team['user_name'] + ' ' + domain)
+#for team in teams:
+#  os.system('adtool usercreate ' + team['user_name'] + ' ' + domain)
 
 # make sure changes have propagated
 #time.sleep(10)
 
 for idx, team in enumerate(teams):
-  os.system('adtool setpass ' + team['user_name'] + " '" + team['password'] + "'")
+#  os.system('adtool setpass ' + team['user_name'] + " '" + team['password'] + "'")
   os.system('adtool userunlock ' + team['user_name'])
   os.system('adtool attributereplace ' + team['user_name'] + ' uid ' + team['user_name'])
   os.system('adtool attributereplace ' + team['user_name'] + ' uidNumber ' + str(uid + idx))

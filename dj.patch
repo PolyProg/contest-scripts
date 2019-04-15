@@ -1,0 +1,174 @@
+diff -aur lib/lib.misc.php lib/lib.misc.php
+--- lib/lib.misc.php	2019-04-15 14:22:59.349029276 +0200
++++ lib/lib.misc.php	2019-04-12 20:52:17.760227545 +0200
+@@ -95,17 +95,32 @@
+  */
+ function problemVisible($probid)
+ {
+-	global $DB, $cdata;
++	global $DB, $cdata, $userdata;
+ 
+ 	if ( empty($probid) ) return FALSE;
+ 
+ 	$fdata = calcFreezeData($cdata);
+ 	if ( !$fdata['cstarted'] ) return FALSE;
+ 
++	// Subquery to see if team solved the prerequisite problem.
++	$teamsolved = ' FALSE %_';
++	if ( !empty($userdata['teamid']) ) {
++		$teamsolved = "EXISTS(SELECT submitid FROM submission s
++		                      LEFT JOIN judging j USING (submitid)
++		                      WHERE s.cid = contestproblem.cid
++		                        AND s.teamid = %i
++		                        AND s.probid = contestproblem.previd
++		                        AND j.result = 'correct'
++	                            AND j.valid = 1)";
++	}
++
+ 	return $DB->q('MAYBETUPLE SELECT probid FROM problem
+ 	               INNER JOIN contestproblem USING (probid)
+-	               WHERE cid = %i AND allow_submit = 1 AND probid = %i',
+-	              $cdata['cid'], $probid) !== NULL;
++	               WHERE cid = %i AND allow_submit = 1 AND probid = %i
++	                 AND ( previd is NULL
++	                       OR ' . ( $fdata['showfinal'] ? 'TRUE' : 'FALSE' ) . '
++	                       OR ' . $teamsolved . ' )',
++	              $cdata['cid'], $probid, $userdata['teamid']) !== NULL;
+ }
+ 
+ /**
+diff -aur lib/www/common.php lib/www/common.php
+--- lib/www/common.php	2019-04-15 14:22:59.353029254 +0200
++++ lib/www/common.php	2019-04-12 21:09:44.786216953 +0200
+@@ -1,4 +1,5 @@
+ <?php
++
+ /**
+  * Common functions shared between team/public/jury interface
+  *
+@@ -529,7 +530,7 @@
+ 	}
+ 
+ 	if ( empty($prob) || (!IS_JURY && !problemVisible($probid)) ) {
+-		error("Problem p$probid not found or not available");
++		error("Problem p$probid not found or not available, you may need to solve another problem first");
+ 	}
+ 
+ 	switch ( $prob['problemtext_type'] ) {
+@@ -621,6 +622,7 @@
+ 		if ( $res->count() > 0 ) {
+ 			echo "<ul>\n";
+ 			while($row = $res->next()) {
++	if(problemVisible($row['probid'])) {
+ 				print '<li><strong> Problem ' . specialchars($row['shortname']) . ': ' .
+ 				      specialchars($row['name']) . "</strong><br />\n";
+ 				if ( isset($row['problemtext_type']) ) {
+@@ -640,6 +642,7 @@
+ 					}
+ 				}
+ 				print "<br /></li>\n";
++	}
+ 			}
+ 			echo "</ul>\n";
+ 		} else {
+diff -aur lib/www/printing.php lib/www/printing.php
+--- lib/www/printing.php	2019-04-15 14:22:59.353029254 +0200
++++ lib/www/printing.php	2019-04-13 14:10:44.741507433 +0200
+@@ -156,11 +156,12 @@
+ 		$highlight = "-E" . escapeshellarg($language);
+ 	}
+ 
+-	$teamname = $DB->q('MAYBEVALUE SELECT t.name FROM user u
+-	                    LEFT JOIN team t USING (teamid)
+-	                    WHERE username = %s', $username);
++	$team = $DB->q('TUPLE SELECT t.name, t.room FROM user u
++	                LEFT JOIN team t USING (teamid)
++	                WHERE username = %s', $username);
+ 
+-	$header = "User: $username   Team: $teamname|   File: $origname   |Page $% of $=";
++	$header = "Team: $username " . $team['name'] . " | " . $team['room']
++                  . " | Page $% of $=";
+ 
+ 	// For debugging or spooling to a different host.
+ 	// Also uncomment '-p $tmp' below.
+@@ -170,7 +171,8 @@
+ 	     . " -b " . escapeshellarg($header)
+ 	     . " -a 0-10 "
+ 	     . " -f Courier9 "
+-	     //. " -p $tmp "
++             . " -q "
++	     . " -p /opt/domjudge/print/" . uniqid(rand(), true) . ".ps "
+ 	     . escapeshellarg($filename) . " 2>&1";
+ 
+ 	exec($cmd, $output, $retval);
+diff -aur www/jury/contest.php www/jury/contest.php
+--- www/jury/contest.php	2019-04-15 14:22:59.561028103 +0200
++++ www/jury/contest.php	2019-04-12 20:19:17.855256768 +0200
+@@ -200,7 +200,8 @@
+ 			allow_submit: true,
+ 			allow_judge: true,
+ 			color: '',
+-			lazy_eval_results: ''
++			lazy_eval_results: '',
++			previd: ''
+ 		};
+ 
+ 		for ( var i = 0; i < current_problems.length; i++ ) {
+@@ -217,7 +218,8 @@
+ 			.replace(/\{shortname\}/g, contest_problem_data.shortname)
+ 			.replace(/\{points\}/g, contest_problem_data.points)
+ 			.replace(/\{color\}/g, contest_problem_data.color)
+-			.replace(/\{lazy_eval_results\}/g, contest_problem_data.lazy_eval_results);
++			.replace(/\{lazy_eval_results\}/g, contest_problem_data.lazy_eval_results)
++			.replace(/\{previd\}/g, contest_problem_data.previd == null ? '' : contest_problem_data.previd);
+ 
+ 		$('tbody', $table).append(templateContents);
+ 
+@@ -284,6 +286,9 @@
+ 		<?php echo addInputField('number',"data[0][mapping][0][extra][{id}][lazy_eval_results]",
+                                  '{lazy_eval_results}', ' style="width:10ex" min="0" max="1"'); ?>
+ 	</td>
++	<td>
++		<?php echo addInput("data[0][mapping][0][extra][{id}][previd]", '{previd}'); ?>
++	</td>
+ </tr>
+ </script>
+ <table id="problems_table">
+@@ -299,6 +304,7 @@
+ 		<a target="_blank" href="http://www.w3schools.com/cssref/css_colornames.asp">
+ 		<img src="../images/b_help.png" class="smallpicto" alt="?"></a></th>
+ 		<th>lazy eval</th>
++		<th>depends on</th>
+ 	</tr>
+ 	</thead>
+ 	<tbody>
+@@ -453,6 +459,7 @@
+ 	echo "<th scope=\"col\">allow<br />judge</th>";
+ 	echo "<th class=\"sorttable_nosort\" scope=\"col\">colour</th>\n";
+ 	echo "<th scope=\"col\">lazy eval</th>\n";
++	echo "<th scope=\"col\">depends on</th>\n";
+ 	echo "<th scope=\"col\"></th>\n";
+ 	echo "</tr>\n</thead>\n<tbody>\n";
+ 
+@@ -478,6 +485,7 @@
+ 			: '<td>'. $link . '&nbsp;</a></td>' );
+ 		echo "<td>" . $link . ( isset($row['lazy_eval_results']) ?
+ 		                        printyn($row['lazy_eval_results']) : '-' ) . "</a></td>\n";
++		echo "<td>" . ( isset($row['previd']) ? $row['previd'] : '-' ) . "</td>\n";
+ 		if ( IS_ADMIN ) {
+ 			echo "<td>" .
+ 			     delLinkMultiple('contestproblem',array('cid','probid'),
+diff -aur www/team/index.php www/team/index.php
+--- www/team/index.php	2019-04-15 14:22:59.573028036 +0200
++++ www/team/index.php	2019-04-12 20:19:48.103088626 +0200
+@@ -83,7 +83,9 @@
+ 
+ 	$probs = array();
+ 	foreach($probdata as $probinfo) {
+-		$probs[$probinfo['probid']]=$probinfo['shortname'];
++		if(problemVisible($probinfo['probid'])) {
++			$probs[$probinfo['probid']]=$probinfo['shortname'];
++		}
+ 	}
+ 	$probs[''] = 'problem';
+ 	echo addSelect('probid', $probs, '', true);
