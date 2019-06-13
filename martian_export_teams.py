@@ -41,7 +41,6 @@ for line in file_contents.splitlines()[1:]:
       'name': team_name,
       'members': [cells[2], cells[4]],
       'category_id': dj_categ,
-      'location': ' ',
       'password': gen_password(),
       'extra': []
     }
